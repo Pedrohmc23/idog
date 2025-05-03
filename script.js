@@ -1,44 +1,42 @@
-function gerarPDF() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  const nome = document.getElementById('nome').value;
-  const raca = document.getElementById('raca').value;
-  const nascimento = document.getElementById('nascimento').value;
-  const peso = document.getElementById('peso').value;
-  const dono = document.getElementById('dono').value;
-  const vacinas = document.getElementById('vacinas').value;
-  const proximaVacina = document.getElementById('proximaVacina').value;
-  const remedios = document.getElementById('remedios').value;
-  const proximoRemedio = document.getElementById('proximoRemedio').value;
 
-  doc.text(`IDOG - Registro`, 10, 10);
-  doc.text(`Nome: ${nome}`, 10, 20);
-  doc.text(`Raça: ${raca}`, 10, 30);
-  doc.text(`Nascimento: ${nascimento}`, 10, 40);
-  doc.text(`Peso: ${peso} kg`, 10, 50);
-  doc.text(`Dono: ${dono}`, 10, 60);
-  doc.text(`Vacinas: ${vacinas}`, 10, 70);
-  doc.text(`Próxima Vacina: ${proximaVacina}`, 10, 80);
-  doc.text(`Remédios: ${remedios}`, 10, 90);
-  doc.text(`Próximo Remédio: ${proximoRemedio}`, 10, 100);
-  doc.save("idog_registro.pdf");
+function generatePDF() {
+  const data = new FormData(document.getElementById('dogForm'));
+  const content = `
+    Nome: ${data.get("name")}
+    Raça: ${data.get("breed")}
+    Dono: ${data.get("owner")}
+    Nascimento: ${data.get("birth")}
+    Peso: ${data.get("weight")} kg
+
+    Vacinas:
+    ${data.get("vaccines")}
+
+    Remédios:
+    ${data.get("medications")}
+  `;
+  const blob = new Blob([content], { type: "application/pdf" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "idog_registro.pdf";
+  link.click();
 }
 
-function gerarRecomendacoes() {
-  const peso = parseFloat(document.getElementById('peso').value);
-  const nascimento = new Date(document.getElementById('nascimento').value);
-  const hoje = new Date();
-  const idadeMeses = Math.floor((hoje - nascimento) / (1000 * 60 * 60 * 24 * 30));
-  let recomendacao = `Idade: ${idadeMeses} meses.\n`;
+function getRecommendation() {
+  const data = new FormData(document.getElementById('dogForm'));
+  const peso = parseFloat(data.get("weight"));
+  const idadeMeses = Math.floor((new Date() - new Date(data.get("birth"))) / (1000 * 60 * 60 * 24 * 30));
+  let msg = `Seu cachorro tem ${idadeMeses} meses e pesa ${peso}kg.\n`;
 
-  if (peso < 5) recomendacao += "Peso abaixo do ideal para a idade. Consulte um veterinário.\n";
-  else if (peso > 10) recomendacao += "Peso elevado. Atenção à alimentação e exercícios.\n";
-  else recomendacao += "Peso dentro do esperado. Continue monitorando.\n";
+  if (idadeMeses < 4) {
+    msg += "👉 Está na fase de vacinação inicial (V8, V10, raiva, etc).\n";
+  }
+  if (peso > 10) {
+    msg += "⚠️ Pode estar acima do peso para essa idade. Consulte um veterinário.\n";
+  } else if (peso < 5) {
+    msg += "⚠️ Pode estar abaixo do peso. Verifique alimentação.\n";
+  } else {
+    msg += "✅ Peso adequado para um filhote de médio porte.\n";
+  }
 
-  const proximaVacina = document.getElementById('proximaVacina').value;
-  const proximoRemedio = document.getElementById('proximoRemedio').value;
-  if (proximaVacina) recomendacao += `Próxima vacina: ${proximaVacina}.\n`;
-  if (proximoRemedio) recomendacao += `Próximo remédio: ${proximoRemedio}.\n`;
-
-  document.getElementById('output').innerText = recomendacao;
+  document.getElementById("output").innerText = msg;
 }
